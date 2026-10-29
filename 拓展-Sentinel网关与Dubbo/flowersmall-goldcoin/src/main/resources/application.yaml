@@ -1,0 +1,21 @@
+server:
+  port: 8003
+spring:
+  application:
+    name: goldCoin
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:8080
+        port: 8722
+      eager: true
+dubbo:
+  scan:
+    base-packages: cn.js.ccit.flowersmall.goldcoin
+  application:
+    name: goldCoin
+  protocol:
+    name: dubbo
+    port: 20880
+  registry:
+    address: N/A

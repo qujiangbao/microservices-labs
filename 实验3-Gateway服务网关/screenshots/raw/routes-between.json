@@ -1,0 +1,1 @@
+[{"predicate":"(Between: 2026-10-13T19:00+08:00[Asia/Shanghai] and 2026-10-13T22:00+08:00[Asia/Shanghai] && Paths: [/provider/**], match trailing slash: true)","route_id":"provider_route","filters":["[[StripPrefix parts = 1], order = 1]"],"uri":"lb://service-provider","order":10}]

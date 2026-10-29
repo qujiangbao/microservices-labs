@@ -1,0 +1,86 @@
+server:
+  # 讲义端口是 8001。这里用 8011，方便和过滤器案例、实验3同时运行。
+  port: 8011
+spring:
+  application:
+    name: service-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        group: PREDICATE_GROUP
+    gateway:
+      routes:
+        # After：请求时间晚于该时间才匹配。18:00 早于本次实验，所以 /hello 能通过。
+        - id: route-after
+          uri: http://localhost:9011
+          predicates:
+            - Path=/hello
+            - After=2026-10-16T08:00:00+08:00[Asia/Shanghai]
+
+        # After 设在未来，用来对照“时间不匹配则 404”。
+        - id: route-after-deny
+          uri: http://localhost:9011
+          predicates:
+            - Path=/after-deny/hello
+            - After=2099-01-01T00:00:00+08:00[Asia/Shanghai]
+
+        # Between：落在两个时间之间才匹配，再把路径改写成 /hello。
+        - id: route-between
+          uri: http://localhost:9011
+          predicates:
+            - Path=/between/hello
+            - Between=2026-10-16T08:00:00+08:00[Asia/Shanghai],2026-10-16T18:00:00+08:00[Asia/Shanghai]
+          filters:
+            - RewritePath=/between/(?<segment>.*), /$\{segment}
+
+        # Cookie 名称 test，值匹配正则 ch.p
+        - id: route-cookie
+          uri: http://localhost:9011
+          predicates:
+            - Path=/cookie/hello
+            - Cookie=test,ch.p
+          filters:
+            - RewritePath=/cookie/(?<segment>.*), /$\{segment}
+
+        # Header 名称 X-Request-Id，值必须是数字
+        - id: route-header
+          uri: http://localhost:9011
+          predicates:
+            - Path=/header/hello
+            - Header=X-Request-Id,\d+
+          filters:
+            - RewritePath=/header/(?<segment>.*), /$\{segment}
+
+        # Method 只放行 GET 和 POST
+        - id: route-method
+          uri: http://localhost:9011
+          predicates:
+            - Path=/method/hello
+            - Method=GET,POST
+          filters:
+            - RewritePath=/method/(?<segment>.*), /$\{segment}
+
+        # Path：/red/1 或 /blue/bar
+        - id: route-path
+          uri: http://localhost:9011
+          predicates:
+            - Path=/red/{segment},/blue/{segment}
+
+        # Query：只有参数 green
+        - id: route-query-green
+          uri: http://localhost:9011
+          predicates:
+            - Path=/query/green
+            - Query=green
+          filters:
+            - SetPath=/hello
+
+        # Query：参数 red，值匹配正则 gree.
+        - id: route-query
+          uri: http://localhost:9011
+          predicates:
+            - Path=/query/hello
+            - Query=red,gree.
+          filters:
+            - RewritePath=/query/(?<segment>.*), /$\{segment}

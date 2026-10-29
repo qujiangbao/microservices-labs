@@ -1,0 +1,72 @@
+server:
+  port: 8001
+spring:
+  application:
+    name: service-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        group: FILTER_GROUP
+    gateway:
+      routes:
+        # AddRequestHeader：给请求加上 X-Request-red: blue
+        - id: addheader-route
+          uri: http://localhost:9001
+          predicates:
+            - Path=/test/head
+            - Method=GET
+          filters:
+            - AddRequestHeader=X-Request-red, blue
+
+        # AddRequestParameter：给请求加上参数 red=blue
+        - id: add_request_parameter_route
+          uri: http://localhost:9001
+          predicates:
+            - Path=/test/param
+            - Method=GET
+          filters:
+            - AddRequestParameter=red, blue
+
+        # AddResponseHeader：给响应加上 X-Response-Red: Blue
+        - id: add_response_header_route
+          uri: http://localhost:9001
+          predicates:
+            - Path=/hello
+            - Method=GET
+          filters:
+            - AddResponseHeader=X-Response-Red, Blue
+
+        # RemoveResponseHeader：删掉响应头 X-Response-red
+        - id: remove_response_header_route
+          uri: http://localhost:9001
+          predicates:
+            - Path=/test/reresheader
+            - Method=GET
+          filters:
+            - RemoveResponseHeader=X-Response-red
+
+        # StripPrefix：去掉路径前 2 段，/red/blue/hello -> /hello
+        - id: strip_prefix_route
+          uri: http://localhost:9001
+          order: 1
+          predicates:
+            - Path=/red/blue/**
+          filters:
+            - StripPrefix=2
+
+        # RewritePath：把 /red/hello 换成 /hello
+        - id: rewritepath_route
+          uri: http://localhost:9001
+          order: 2
+          predicates:
+            - Path=/red/**
+          filters:
+            - RewritePath=/red/(?<segment>.*), /$\{segment}
+
+        # lb:// 会自动走 LoadBalancerClientFilter
+        - id: lb-route
+          uri: lb://service-provider
+          order: 100
+          predicates:
+            - Path=/test/lb

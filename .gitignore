@@ -1,0 +1,33 @@
+# Maven / Java build output
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IntelliJ / Eclipse / VS Code
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+
+# Logs and local runtime
+logs/
+*.log
+derby.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Unpacked Sentinel dashboard
+第7单元-Sentinel服务熔断与限流/sentinel/ui/

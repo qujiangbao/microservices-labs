@@ -1,0 +1,393 @@
+广州华商学院实验报告
+
+实验项目名称 服务注册与发现以及配置管理 课程名称 微服务架构 成绩评定         
+实验类型：验证型□综合型?设计型□ 创新型□  
+实验日期  2026年9月3日 指导教师     张丽娟    
+学生姓名                 学号                 专业班级                               
+一、实验项目训练方案
+小组合作：是□ 否?	小组成员：无
+实验目的：
+1.能够在项目中用Maven创建父子工程；
+2.能够使用Nacos当作微服务的注册中心（完成微服务的注册与发现）；
+3.能够使用Nacos当作微服务的配置中心（完成微服务的配置管理）；
+实验场地及仪器、设备和材料：
+1.实验硬件环境：机房台式主机电脑
+2.实验软件环境：Windows 、IDEA
+实验内容：
+任务① 父子工程创建与Nacos实践
+（1）创建Maven父子聚合工程 
+（2）服务提供者注册到Nacos
+（3）服务消费者发现并调用服务 
+（4）Nacos控制台管理
+详细实验步骤：
+步骤1：先创建父工程，配置pom.xml文件以管理公共依赖和版本。
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>cn.js.ccit</groupId>
+    <artifactId>unit2Demo1-nacos-discovery</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <modules>
+
+        <module>service-provider</module>
+        <module>service-consumer</module>
+    </modules>
+
+    <packaging>pom</packaging>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <!--spring boot 2.6.3-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>2.6.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!--spring cloud 2021.0.1-->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2021.0.1</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!--spring cloud Alibaba 2021.0.1.0-->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>2021.0.1.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            
+        </dependencies>
+    </dependencyManagement>
+
+</project>
+
+步骤2：分别创建2个子模块（微服务），服务提供者（service-provider）和服务消费者（service-consumer）。
+步骤3：在上述两个微服务的pom.xml文件中配置Nacos服务注册与发现组件和web的依赖。
+<!--nacos discovery 服务发现依赖-->
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+
+Tips：由于此时我们还没有学Feign或者Dubbo的方式（均会在第三单元讲解）来让微服务之间简便地发起服务调用，因此消费者微服务service-consumer需要使用Spring自带的发起HTTP的客户端工具类RestTemplate，因此就需要配合使用客户端的负载均衡，因此在消费者微服务的pom.xml中需要额外再加上这个做客户端负载均衡的依赖。
+<!--服务负载均衡依赖-->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-loadbalancer</artifactId>
+</dependency>
+
+步骤4：在上述两个微服务的业务全局配置文件application.yaml中配置Nacos服务器地址及应用名称。
+步骤5：在以上两个微服务分别定义出controller中的方法，并使用Spring内置的HTTP客户端类（即RestTemplate，其中提供一些通用的方法，比如：restTemplate.getForObject(调用的微服务URL + 接口地址，responseType.class)，可简便地实现HTTP接口的调用），让service-consumer微服务的接口调用service-provider微服务的接口完成对应需求。
+Tips1：这里定义的方法的编码要求是：这个方法需要返回String类型的字符串，这个字符串是这样一句话，“当前是”+ “你自己的名字” + “在工作，我的端口号是”+ 当前服务的端口号。例如：“当前是林卓凡在工作，我的端口号是8080”。
+Tips2：由于SpringBoot框架中没有主动注入RestTemplate对象，所以引提前在service-consumer微服务中提前创建出一个配置类，并在类中使得Spring容器中有RestTemplate的Bean对象。
+
+
+步骤6：启动项目的这两个微服务（启动之前必须要有对应的SpringBoot的标准启动类并加上对应的开启服务注册发现的注解@EnableDiscoveryClient，这是非常基础的知识点，故这里不贴代码了），在浏览器访问Nacos控制台管理页（http://localhost:8848/nacos，默认账号密码均为nacos），测试验证这两个微服务是否分别都成功注册至其中。
+步骤7：在浏览器发送一个请求（比如：http://localhost:端口号/XXX方法的路径），访问服务消费者（即service-consumer微服务）的XXX方法，以测试验证其是否能够调用service-provider微服务的接口并在浏览器页面端打印相应的输出语句。
+
+
+
+任务② Nacos配置管理实践
+（1）bootstrap.yaml配置Nacos连接，并让微服务能够读取Nacos的配置并支持动态刷新（单独写一个工程）
+详细实验步骤：
+步骤1：先创建父工程，配置pom.xml文件以管理公共依赖和版本。
+步骤2：先创建service-config微服务，配置pom.xml文件以管理相应的依赖。
+<dependencies>
+    <!--nacos config 服务配置依赖-->
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+    </dependency>
+
+    <!--nacos discovery 服务发现依赖-->
+    <dependency>
+        <groupId>com.alibaba.cloud</groupId>
+        <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-bootstrap</artifactId>
+    </dependency>
+</dependencies>
+
+步骤3：给微服务的resources目录加上bootstrap.yaml配置文件，配置Nacos的地址等信息。
+# nacos配置中心的地址，配置扩展名等 内容 必须放置在 bootstrap.yaml文件中，以确保 先读配置 再启动
+server:
+  port: 8001
+spring:
+  application:
+    name: service-config
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # Nacos  作为注册中心 的地址
+      config:
+        server-addr: localhost:8848 # Nacos 作为配置中心 的地址
+        file-extension: yaml # 指定.yaml格式的配置文件
+
+步骤4：给微服务的全局业务配置文件application.yaml写如下配置。
+spring:
+  profiles:
+    active: dev # 以开发环境 启动该项目
+步骤5：创建ServiceConfigController，写上一个方法输出Nacos配置中心保存的配置信息。
+@RefreshScope // 这个注解支持配置的自动更新。
+// 作用：当Nacos配置中心修改了某配置的值，程序可以自动感知并更新对应的变量的值
+@RestController
+public class ServiceConfigController {
+
+    @Value("${service.config}")
+    private String serviceConfig;
+
+    @GetMapping("/service/config")
+    public String getConfig() {
+        return serviceConfig;
+    }
+}
+步骤6：给微服务的resources目录加上bootstrap.yaml配置文件，配置Nacos的地址等信息。
+# nacos配置中心的地址，配置扩展名等 内容 必须放置在 bootstrap.yaml文件中，以确保 先读配置 再启动
+
+server:
+  port: 8001
+spring:
+  application:
+    name: service-config
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # Nacos  作为注册中心 的地址
+      config:
+        server-addr: localhost:8848 # Nacos 作为配置中心 的地址
+        file-extension: yaml # 指定.yaml格式的配置文件
+
+步骤7：给微服务的全局业务配置文件application.yaml写如下配置。
+spring:
+  profiles:
+    active: dev # 以开发环境 启动该项目
+步骤8：在Nacos配置中心创建service-config-dev.yaml配置文件。
+
+步骤9： 启动项目（启动之前必须要有对应的SpringBoot的标准启动类并加上对应的开启服务注册发现的注解@EnableDiscoveryClient，这是非常基础的知识点，故这里不贴代码了），在浏览器发送1个请求，访问controller中的getConfig方法，拿到service-config-dev.yaml配置文件中的service.config属性配置的字符串。
+步骤10： 修改Nacos配置中心中的service-config-dev.yaml配置文件中的内容，改为输出字符串“config for dev, v666”+ “你自己真实的名字”，比如“config for dev，v666林卓凡”。重新启动项目，在浏览器发送1个请求，访问controller中的getConfig方法，拿到service-config-dev.yaml配置文件中的service.config属性配置的字符串。
+
+（2）配置的隔离（单独写一个工程）
+详细实验步骤：
+步骤1：先创建父工程，配置pom.xml文件以管理公共依赖和版本。
+步骤2：先创建service-config微服务，配置pom.xml文件以管理相应的依赖（pom的内容同（1）中的相同）。
+
+步骤3：在Nacos注册中心中点击新建命名空间，分别创建Namspace为dev和test的命名空间。
+
+步骤4：在Nacos注册中心的Namspace为dev的命名空间下创建2个Group不同的配置文件（命名为service-config-dev.yaml），2个Group分别命名为MY_1_GROUP和MY_2_GROUP。
+
+步骤5：同上理，在Nacos注册中心的Namspace为test的命名空间下创建2个Group不同的配置文件（命名为service-config-test.yaml），2个Group分别命名为MY_1_GROUP和MY_2_GROUP。
+步骤6：给微服务的resources目录加上bootstrap.yaml配置文件，配置Nacos的地址，namespace等信息。
+server:
+  port: 8001
+spring:
+  application:
+    name: service-config
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # Nacos  作为注册中心 的地址
+      config:
+        server-addr: localhost:8848 # Nacos 作为配置中心 的地址
+        file-extension: yaml # 指定.yaml格式的配置文件
+        namespace: 填写具体命名空间的id值
+        # 比如 namespace: ff485861-cf47-422e-8653-3d87f6a5d80a # 这是dev命名空间的id值
+        group: MY_1_GROUP # 指定分组是 MY_1_GROUP
+#        group: MY_2_GROUP # 指定分组是 MY_2_GROUP
+
+步骤7：给微服务的全局业务配置文件application.yaml写如下配置。
+spring:
+  profiles:
+    active: dev # 以开发环境 启动该项目
+#    active: test # 以测试环境 启动该项目
+步骤8：上面在Nacos配置中心分别创建的4个不同的配置都具体内容分别如下。
+　#MY_1_GROUP分组下的service-config-dev.yaml
+service:
+　　config: config for dev, my 1 group dev namespace
+　#MY_2_GROUP分组下的service-config-dev.yaml
+service:
+　　config: config for dev, my 2 group dev namespace
+　#service-config-test.yaml
+　
+　#MY_1_GROUP分组下的service-config-test.yaml
+service:
+　　config: config for test, my 1 group test namespace
+　#MY_2_GROUP分组下的service-config-test.yaml
+service:
+    config: config for test, my 2 group test namespace
+
+
+
+步骤9：创建ServiceConfigController，写上一个方法输出Nacos配置中心保存的配置信息。
+@RefreshScope // 这个注解支持配置的自动更新。
+// 作用：当Nacos配置中心修改了某配置的值，程序可以自动感知并更新对应的变量的值
+@RestController
+public class ServiceConfigController {
+
+    @Value("${service.config}")
+    private String serviceConfig;
+
+    @GetMapping("/service/config")
+    public String getConfig() {
+        return serviceConfig;
+    }
+}
+
+步骤10： 启动项目，在浏览器发送1个请求，访问controller中的getConfig方法，拿到命名空间namespace为dev的Group为MY_1_GROUP的service-config-dev.yaml配置文件中的service.config属性配置的字符串，以验证配置的隔离。
+步骤11： 启动项目，在浏览器发送1个请求，访问controller中的getConfig方法，拿到命名空间namespace为dev的Group为MY_2_GROUP的service-config-dev.yaml配置文件中的service.config属性配置的字符串，以验证配置的隔离。
+步骤12： 启动项目，在浏览器发送1个请求，访问controller中的getConfig方法，拿到命名空间namespace为test的Group为MY_1_GROUP的service-config-test.yaml配置文件中的service.config属性配置的字符串，以验证配置的隔离。
+步骤13： 启动项目，在浏览器发送1个请求，访问controller中的getConfig方法，拿到命名空间namespace为test的Group为MY_2_GROUP的service-config-test.yaml配置文件中的service.config属性配置的字符串，以验证配置的隔离。
+
+
+（3）配置的共享（单独写一个工程），选做。
+Tips：直接创建一个父工程，然后在此基础上创建2个微服务，一个是服务提供者，一个是服务消费者，然后两个服务都使用的是同一个Nacos注册中心的信息，这样就会有相同的连接Nacos注册中心的配置，故可以把这部分相同的可以共享的配置抽取出来放在Nacos注册中心上，让两个微服务都能共享这统一份配置。
+
+
+
+二、实验总结与评价
+实验总结（包括实验的结果截图、实验过程简述等内容）：
+任务① 父子工程创建与Nacos实践
+步骤1的结果截图：
+
+步骤2的结果截图：
+
+步骤3的结果截图：
+
+步骤4的结果截图：
+
+步骤5的结果截图：
+
+步骤6的结果截图：
+
+步骤7的结果截图：
+
+完成任务①的整体过程简述（请用文字描述）：
+
+
+
+
+
+
+
+
+
+
+任务② Nacos配置管理实践
+（1）bootstrap.yaml配置Nacos连接，并让微服务能够读取Nacos的配置并支持动态刷新（单独写一个工程）
+步骤1的结果截图：
+
+步骤2的结果截图：
+
+步骤3的结果截图：
+
+步骤4的结果截图：
+
+步骤5的结果截图：
+
+步骤6的结果截图：
+
+步骤7的结果截图：
+
+步骤8的结果截图：
+
+步骤9的结果截图：
+
+步骤10的结果截图：
+
+完成任务②（1）的整体过程简述（请用文字描述）：
+
+（2）配置的隔离
+步骤1的结果截图：
+
+步骤2的结果截图：
+
+步骤3的结果截图：
+
+步骤4的结果截图：
+
+步骤5的结果截图：
+
+步骤6的结果截图：
+
+步骤7的结果截图：
+
+步骤8的结果截图：
+
+步骤9的结果截图：
+
+步骤10的结果截图：
+
+步骤11的结果截图：
+
+步骤12的结果截图：
+
+步骤13的结果截图：
+
+完成任务②（2）的整体过程简述（请用文字描述）：
+
+（3）配置的共享（单独写一个工程），选做。
+结果截图：
+
+完成任务②（3）的整体过程简述（请用文字描述）：
+　　　
+　　　
+　　　
+　　　
+　　　注意事项：如留存空白不足，可继续加页
+对实验的自我评价：
+　　　注意事项1：需要在这里复述调试程序时的主要遇到的错误或问题，并简要分析原因及解决方法，例如：
+　　错误1：java: 对于findAll(int), 找不到合适的方法。
+　　分析：可能没有在JPA接口中声明这个方法，或者该方法不需要int参数。
+　　解决：在测试类中，将List<Book> all = bookRespository.findAll(1);改为List<Book> all = bookRespository.findAll();
+　　　注意事项2：该部分的文字为宋体五号，段落文字两端对齐、首行缩进2个字符、行距1.5倍。
+　　　注意事项3：编写你们自己的实验报告时，请把本文档中的所有注意事项全都删除掉，谢谢配合~
+　　　
+　　　
+　　　指导教师评语：
+　　　1.实验态度（20分）
+　　□优秀：实验态度严谨认真，积极投入，严守纪律，预习准备充分完备。（18分及以上）
+　　□良好：实验态度端正，主动配合实验，遵守规范，预习准备较为充分。（16-17分）
+　　□合格：实验态度基本端正，能完成实验，无违纪，预习准备基本到位。（12-15分）
+　　□待改进：实验态度不够认真，准备不足，纪律意识有待加强。（11分以下）
+　　　2.操作能力（40分）
+　　□优秀：实验步骤规范无失误，仪器使用熟练，独立动手能力突出。（36分及以上）
+　　□良好：实验步骤规范，核心操作无误，仪器较熟练，可独立完成主要环节。（32-35分）
+　　□合格：实验步骤基本规范，偶有细节失误，需少量指导完成实验。（24-31分）
+　　□待改进：实验步骤不规范，操作失误较多，仪器生疏，独立操作能力较弱。（23分以下）
+　　　3.实验报告规范与质量（30分）
+　　□优秀：报告格式规范，数据完整准确，结论科学合理，书写整洁。（27分及以上）
+　　□良好：报告格式规范，数据完整，分析合理清晰，结论正确无误。（24-26分）
+　　□合格：报告格式基本规范，数据无缺失，分析合理，存在少量细节错误。（18-23分）
+　　□待改进：报告格式混乱，数据错漏，分析逻辑不清，结论缺乏依据。（17分以下）
+　　　4.创新表现（10分）
+　　□优秀：主动优化实验思路，有创新改进，自主拓展，探究意识极强。（9分及以上）
+　　□良好：能结合理论思考，有一定探究行为，在基础上略有拓展。（8分）
+　　□合格：严格按要求完成实验，无创新拓展，扎实完成既定实验目标。（6-7分）
+　　□待改进：仅被动完成实验，无自主思考，缺乏探究与创新意识。（5分以下）
+　　
+　　　实验成绩评定：      指导教师（签名）：      日期：2026年 9月3日

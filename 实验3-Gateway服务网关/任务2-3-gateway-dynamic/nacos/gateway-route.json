@@ -1,0 +1,21 @@
+{
+  "id": "provider_route",
+  "order": 10,
+  "predicates": [
+    {
+      "name": "Path",
+      "args": {
+        "pattern": "/provider/**"
+      }
+    }
+  ],
+  "filters": [
+    {
+      "name": "StripPrefix",
+      "args": {
+        "parts": "1"
+      }
+    }
+  ],
+  "uri": "lb://service-provider"
+}

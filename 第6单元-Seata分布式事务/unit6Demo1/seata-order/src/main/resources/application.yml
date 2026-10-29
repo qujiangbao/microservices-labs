@@ -1,0 +1,57 @@
+server:
+  port: 8001
+
+spring:
+  application:
+    name: seata-order
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3307/seata_order?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: 123
+
+logging:
+  level:
+    io:
+      seata: info
+
+mybatis:
+  mapperLocations: classpath:mapper/*.xml
+
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+
+  # 事务组的名称，对应 service.vgroupMapping.default_tx_group=xxx 中配置的
+  tx-service-group: default_tx_group
+  # 配置事务组与集群的对应关系
+  service:
+    vgroup-mapping:
+      # default_tx_group 为事务组的名称，default 为集群名称（与registry.conf中的一致）
+      default_tx_group: default
+    disable-global-transaction: false
+  registry:
+    type: nacos
+    nacos:
+      application: seata-server
+      server-addr: localhost:8848
+      group: SEATA_GROUP
+      namespace: 93548d54-b713-459e-b9e5-6ed269e3ee1c
+      username: nacos
+      password: nacos
+      cluster: default
+  config:
+    type: nacos
+    nacos:
+      server-addr: localhost:8848
+      group: SEATA_GROUP
+      namespace: 93548d54-b713-459e-b9e5-6ed269e3ee1c
+      username: nacos
+      password: nacos
+
+      # Nacos 配置中心配置的 DataID
+      data-id: seataServer.properties

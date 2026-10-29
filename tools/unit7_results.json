@@ -1,0 +1,512 @@
+{
+  "warmup": [
+    {
+      "url": "http://localhost:8089/",
+      "status": 200,
+      "body": "hi",
+      "ms": 12
+    },
+    {
+      "url": "http://localhost:8089/hello?name=test",
+      "status": 200,
+      "body": "Hello test!",
+      "ms": 27
+    },
+    {
+      "url": "http://localhost:8089/hotpoint?type=a&name=rose",
+      "status": 200,
+      "body": "type: a, name: rose\n",
+      "ms": 14
+    },
+    {
+      "url": "http://localhost:8089/hotpoint?type=b&name=lily",
+      "status": 200,
+      "body": "type: b, name: lily\n",
+      "ms": 4
+    },
+    {
+      "url": "http://localhost:8089/test-sys-qps1",
+      "status": 200,
+      "body": "test qps 1",
+      "ms": 27
+    },
+    {
+      "url": "http://localhost:8089/test-sys-qps2",
+      "status": 200,
+      "body": "test qps 2",
+      "ms": 14
+    },
+    {
+      "url": "http://localhost:8089/test-sys-qps3",
+      "status": 200,
+      "body": "test qps 3",
+      "ms": 3
+    },
+    {
+      "url": "http://localhost:8089/hi",
+      "status": 200,
+      "body": "hi",
+      "ms": 27
+    }
+  ],
+  "login": {
+    "status": 200,
+    "body": "{\"success\":true,\"code\":0,\"msg\":\"success\",\"data\":{\"id\":\"sentinel\",\"nickName\":\"sentinel\",\"loginName\":\"sentinel\",\"superUser\":true}}"
+  },
+  "apps": {
+    "success": true,
+    "code": 0,
+    "msg": "success",
+    "data": [
+      {
+        "app": "service-sentinel",
+        "appType": 0,
+        "machines": [
+          {
+            "app": "service-sentinel",
+            "appType": 0,
+            "hostname": "LAPTOP-NPEFPKAM",
+            "ip": "10.26.144.55",
+            "port": 8720,
+            "lastHeartbeat": 1792724588167,
+            "heartbeatVersion": 1792724588162,
+            "version": "1.8.3",
+            "dead": false,
+            "healthy": true
+          }
+        ],
+        "dead": false,
+        "shown": true
+      }
+    ]
+  },
+  "machines": {
+    "success": true,
+    "code": 0,
+    "msg": "success",
+    "data": [
+      {
+        "app": "service-sentinel",
+        "hostname": "LAPTOP-NPEFPKAM",
+        "ip": "10.26.144.55",
+        "port": 8720,
+        "heartbeatVersion": 1792724588162,
+        "lastHeartbeat": 1792724588167,
+        "healthy": true,
+        "version": "1.8.3"
+      }
+    ]
+  },
+  "machine": {
+    "ip": "10.26.144.55",
+    "port": 8720
+  },
+  "resources_before": {
+    "success": true,
+    "code": 0,
+    "msg": "success",
+    "data": [
+      {
+        "parentTtId": null,
+        "ttId": null,
+        "resource": "/hi",
+        "threadNum": 0,
+        "passQps": 0,
+        "blockQps": 0,
+        "totalQps": 0,
+        "averageRt": 0,
+        "passRequestQps": null,
+        "exceptionQps": 0,
+        "oneMinutePass": 2,
+        "oneMinuteBlock": 0,
+        "oneMinuteException": 0,
+        "oneMinuteTotal": 2,
+        "visible": true
+      },
+      {
+        "parentTtId": null,
+        "ttId": null,
+        "resource": "/test-sys-qps1",
+        "threadNum": 0,
+        "passQps": 0,
+        "blockQps": 0,
+        "totalQps": 0,
+        "averageRt": 0,
+        "passRequestQps": null,
+        "exceptionQps": 0,
+        "oneMinutePass": 2,
+        "oneMinuteBlock": 0,
+        "oneMinuteException": 0,
+        "oneMinuteTotal": 2,
+        "visible": true
+      },
+      {
+        "parentTtId": null,
+        "ttId": null,
+        "resource": "/test-sys-qps3",
+        "threadNum": 0,
+        "passQps": 0,
+        "blockQps": 0,
+        "totalQps": 0,
+        "averageRt": 0,
+        "passRequestQps": null,
+        "exceptionQps": 0,
+        "oneMinutePass": 2,
+        "oneMinuteBlock": 0,
+        "oneMinuteException": 0,
+        "oneMinuteTotal": 2,
+        "visible": true
+      },
+      {
+        "parentTtId": null,
+        "ttId": null,
+        "resource": "/test-sys-qps2",
+        "threadNum": 0,
+        "passQps": 0,
+        "blockQps": 0,
+        "totalQps": 0,
+        "averageRt": 0,
+        "passRequestQps": null,
+        "exceptionQps": 0,
+        "oneMinutePass": 2,
+        "oneMinuteBlock": 0,
+        "oneMinuteException": 0,
+        "oneMinuteTotal": 2,
+        "visible": true
+      },
+      {
+        "parentTtId": null,
+        "ttId": null,
+        "resource": "/hotpoint",
+        "threadNum": 0,
+        "passQps": 0,
+        "blockQps": 0,
+        "totalQps": 0,
+        "averageRt": 0,
+        "passRequestQps": null,
+        "exceptionQps": 0,
+        "oneMinutePass": 4,
+        "oneMinuteBlock": 0,
+        "oneMinuteException": 0,
+        "oneMinuteTotal": 4,
+        "visible": true
+      },
+      {
+        "parentTtId": null,
+        "ttId": null,
+        "resource": "hotpoint",
+        "threadNum": 0,
+        "passQps": 0,
+        "blockQps": 0,
+        "totalQps": 0,
+        "averageRt": 0,
+        "passRequestQps": null,
+        "exceptionQps": 0,
+        "oneMinutePass": 4,
+        "oneMinuteBlock": 0,
+        "oneMinuteException": 0,
+        "oneMinuteTotal": 4,
+        "visible": true
+      },
+      {
+        "parentTtId": null,
+        "ttId": null,
+        "resource": "/",
+        "threadNum": 0,
+        "passQps": 0,
+        "blockQps": 0,
+        "totalQps": 0,
+        "averageRt": 0,
+        "passRequestQps": null,
+        "exceptionQps": 0,
+        "oneMinutePass": 2,
+        "oneMinuteBlock": 0,
+        "oneMinuteException": 0,
+        "oneMinuteTotal": 2,
+        "visible": true
+      },
+      {
+        "parentTtId": null,
+        "ttId": null,
+        "resource": "/hello",
+        "threadNum": 0,
+        "passQps": 0,
+        "blockQps": 0,
+        "totalQps": 0,
+        "averageRt": 0,
+        "passRequestQps": null,
+        "exceptionQps": 0,
+        "oneMinutePass": 3,
+        "oneMinuteBlock": 0,
+        "oneMinuteException": 0,
+        "oneMinuteTotal": 3,
+        "visible": true
+      }
+    ]
+  },
+  "flow_add": {
+    "success": true,
+    "code": 0,
+    "msg": "success",
+    "data": {
+      "id": 1,
+      "app": "service-sentinel",
+      "ip": "10.26.144.55",
+      "port": 8720,
+      "limitApp": "default",
+      "resource": "/hello",
+      "grade": 1,
+      "count": 1.0,
+      "strategy": 0,
+      "refResource": null,
+      "controlBehavior": 0,
+      "warmUpPeriodSec": null,
+      "maxQueueingTimeMs": null,
+      "clusterMode": false,
+      "clusterConfig": null,
+      "gmtCreate": "2026-10-23T03:03:17.396+0000",
+      "gmtModified": "2026-10-23T03:03:17.396+0000"
+    }
+  },
+  "qps_burst": {
+    "total": 20,
+    "pass": 3,
+    "blocked": 17,
+    "other": 0,
+    "sample": {
+      "pass": "Hello test!",
+      "block": "Blocked by Sentinel (flow limiting)",
+      "other": ""
+    }
+  },
+  "hot_add": {
+    "success": false,
+    "code": -1,
+    "msg": "rule can't be null",
+    "data": null
+  },
+  "hot_a": {
+    "total": 30,
+    "pass": 30,
+    "blocked": 0,
+    "other": 0,
+    "sample": {
+      "pass": "type: a, name: rose\n",
+      "block": "",
+      "other": ""
+    }
+  },
+  "hot_b": {
+    "total": 8,
+    "pass": 8,
+    "blocked": 0,
+    "other": 0,
+    "sample": {
+      "pass": "type: b, name: lily\n",
+      "block": "",
+      "other": ""
+    }
+  },
+  "system_add": {
+    "success": false,
+    "code": -1,
+    "msg": "only one of [highestSystemLoad, avgRt, maxThread, qps,highestCpuUsage] value must be set > 0, but 2 values get",
+    "data": null
+  },
+  "system_burst": {
+    "total": 50,
+    "pass": 50,
+    "blocked": 0,
+    "other": 0,
+    "sample": {
+      "pass": "hi",
+      "block": "",
+      "other": ""
+    }
+  },
+  "metric": {
+    "success": true,
+    "code": 0,
+    "msg": "success",
+    "data": {
+      "pageIndex": 1,
+      "metric": {
+        "/hello": [
+          {
+            "id": null,
+            "app": "service-sentinel",
+            "timestamp": 1792724578000,
+            "gmtCreate": 1792724586569,
+            "resource": "/hello",
+            "passQps": 1,
+            "blockQps": 0,
+            "successQps": 1,
+            "exceptionQps": 0,
+            "rt": 1.0,
+            "count": 1
+          },
+          {
+            "id": null,
+            "app": "service-sentinel",
+            "timestamp": 1792724594000,
+            "gmtCreate": 1792724600600,
+            "resource": "/hello",
+            "passQps": 1,
+            "blockQps": 0,
+            "successQps": 1,
+            "exceptionQps": 0,
+            "rt": 1.0,
+            "count": 1
+          },
+          {
+            "id": null,
+            "app": "service-sentinel",
+            "timestamp": 1792724598000,
+            "gmtCreate": 1792724600600,
+            "resource": "/hello",
+            "passQps": 3,
+            "blockQps": 17,
+            "successQps": 3,
+            "exceptionQps": 0,
+            "rt": 1.0,
+            "count": 1
+          }
+        ],
+        "/hotpoint": [
+          {
+            "id": null,
+            "app": "service-sentinel",
+            "timestamp": 1792724594000,
+            "gmtCreate": 1792724600600,
+            "resource": "/hotpoint",
+            "passQps": 2,
+            "blockQps": 0,
+            "successQps": 2,
+            "exceptionQps": 0,
+            "rt": 1.0,
+            "count": 1
+          }
+        ],
+        "hotpoint": [
+          {
+            "id": null,
+            "app": "service-sentinel",
+            "timestamp": 1792724594000,
+            "gmtCreate": 1792724600600,
+            "resource": "hotpoint",
+            "passQps": 2,
+            "blockQps": 0,
+            "successQps": 2,
+            "exceptionQps": 0,
+            "rt": 0.0,
+            "count": 1
+          }
+        ],
+        "/test-sys-qps1": [
+          {
+            "id": null,
+            "app": "service-sentinel",
+            "timestamp": 1792724594000,
+            "gmtCreate": 1792724600600,
+            "resource": "/test-sys-qps1",
+            "passQps": 1,
+            "blockQps": 0,
+            "successQps": 1,
+            "exceptionQps": 0,
+            "rt": 2.0,
+            "count": 1
+          }
+        ],
+        "/test-sys-qps3": [
+          {
+            "id": null,
+            "app": "service-sentinel",
+            "timestamp": 1792724594000,
+            "gmtCreate": 1792724600600,
+            "resource": "/test-sys-qps3",
+            "passQps": 1,
+            "blockQps": 0,
+            "successQps": 1,
+            "exceptionQps": 0,
+            "rt": 1.0,
+            "count": 1
+          }
+        ],
+        "/test-sys-qps2": [
+          {
+            "id": null,
+            "app": "service-sentinel",
+            "timestamp": 1792724594000,
+            "gmtCreate": 1792724600600,
+            "resource": "/test-sys-qps2",
+            "passQps": 1,
+            "blockQps": 0,
+            "successQps": 1,
+            "exceptionQps": 0,
+            "rt": 1.0,
+            "count": 1
+          }
+        ],
+        "/": [
+          {
+            "id": null,
+            "app": "service-sentinel",
+            "timestamp": 1792724594000,
+            "gmtCreate": 1792724600600,
+            "resource": "/",
+            "passQps": 1,
+            "blockQps": 0,
+            "successQps": 1,
+            "exceptionQps": 0,
+            "rt": 1.0,
+            "count": 1
+          }
+        ],
+        "/hi": [
+          {
+            "id": null,
+            "app": "service-sentinel",
+            "timestamp": 1792724594000,
+            "gmtCreate": 1792724600600,
+            "resource": "/hi",
+            "passQps": 1,
+            "blockQps": 0,
+            "successQps": 1,
+            "exceptionQps": 0,
+            "rt": 1.0,
+            "count": 1
+          }
+        ]
+      },
+      "totalPage": 1,
+      "pageSize": 20,
+      "totalCount": 8
+    }
+  },
+  "flow_rules": {
+    "success": true,
+    "code": 0,
+    "msg": "success",
+    "data": [
+      {
+        "id": 2,
+        "app": "service-sentinel",
+        "ip": "10.26.144.55",
+        "port": 8720,
+        "limitApp": "default",
+        "resource": "/hello",
+        "grade": 1,
+        "count": 1.0,
+        "strategy": 0,
+        "refResource": null,
+        "controlBehavior": 0,
+        "warmUpPeriodSec": 10,
+        "maxQueueingTimeMs": 500,
+        "clusterMode": false,
+        "clusterConfig": null,
+        "gmtCreate": null,
+        "gmtModified": null
+      }
+    ]
+  }
+}

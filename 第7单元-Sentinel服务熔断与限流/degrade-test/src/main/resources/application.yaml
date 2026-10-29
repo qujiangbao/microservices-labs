@@ -1,0 +1,16 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: degrade-test
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'

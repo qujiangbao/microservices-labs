@@ -1,0 +1,14 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: share-provider
+  cloud:
+    nacos:
+      config:
+        server-addr: localhost:8848
+        file-extension: yaml
+        shared-configs:
+          - data-id: common-nacos.yaml
+            group: DEFAULT_GROUP
+            refresh: true

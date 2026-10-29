@@ -1,0 +1,11 @@
+server:
+  port: 9001
+spring:
+  application:
+    name: service-provider
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        # 与实验3默认分组隔开，避免负载均衡打到 9002 上的实验服务
+        group: FILTER_GROUP

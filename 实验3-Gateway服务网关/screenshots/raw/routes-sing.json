@@ -1,0 +1,1 @@
+[{"predicate":"Paths: [/SingJumpRap/**], match trailing slash: true","route_id":"provider_route","filters":["[[StripPrefix parts = 2], order = 1]"],"uri":"lb://service-provider","order":10}]

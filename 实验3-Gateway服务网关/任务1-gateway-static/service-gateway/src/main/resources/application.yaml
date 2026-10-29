@@ -1,0 +1,14 @@
+server:
+  port: 8002
+spring:
+  application:
+    name: service-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+    gateway:
+      discovery:
+        locator: # localhost:8002/service-provider/hello?name=陈汭
+          enabled: true # 开启gateway服务发现，也即gateway将使用 服务发现 路由请求（到对应的服务上面去）==>静态路由
+          lower-case-service-id: true

@@ -1,0 +1,14 @@
+# nacos配置中心的地址、配置扩展名等内容必须放在 bootstrap.yaml
+# 目的：先读远程配置，再启动 Spring Boot 业务容器
+server:
+  port: 8001
+spring:
+  application:
+    name: service-config
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        server-addr: localhost:8848
+        file-extension: yaml

@@ -1,0 +1,19 @@
+server:
+  port: 8002
+spring:
+  application:
+    name: order
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:8080
+        port: 8721
+      eager: true
+dubbo:
+  application:
+    name: order
+  registry:
+    address: N/A
+  consumer:
+    check: false
+    timeout: 3000

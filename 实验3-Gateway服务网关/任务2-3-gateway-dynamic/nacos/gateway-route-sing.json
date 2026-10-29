@@ -1,0 +1,21 @@
+{
+  "id": "provider_route",
+  "order": 10,
+  "predicates": [
+    {
+      "name": "Path",
+      "args": {
+        "pattern": "/SingJumpRap/**"
+      }
+    }
+  ],
+  "filters": [
+    {
+      "name": "StripPrefix",
+      "args": {
+        "parts": "2"
+      }
+    }
+  ],
+  "uri": "lb://service-provider"
+}

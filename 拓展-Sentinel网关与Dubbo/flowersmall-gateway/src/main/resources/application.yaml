@@ -1,0 +1,33 @@
+server:
+  port: 9000
+spring:
+  application:
+    name: flowersmall-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: product
+          uri: http://127.0.0.1:8001
+          predicates:
+            - Path=/product/**
+          filters:
+            - StripPrefix=1
+        - id: order
+          uri: http://127.0.0.1:8002
+          predicates:
+            - Path=/order/**
+          filters:
+            - StripPrefix=1
+    sentinel:
+      transport:
+        dashboard: localhost:8080
+        port: 8719
+        heartbeat-interval-ms: 10000
+      eager: true
+      filter:
+        enabled: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'

@@ -1,0 +1,542 @@
+第5单元 案例操作步骤
+案例5-1 授权码方式与 案例5-2 数据库存储令牌
+
+（基于 Spring Cloud OAuth 2.0，教材第5单元 P139-156）
+
+一、公共说明
+1. 技术栈：Spring Boot 2.6.3 + Spring Cloud 2021.0.1 + Spring Cloud Alibaba 2021.0.1.0，JDK 1.8；
+2. 关键依赖：security 与 oauth2 固定使用版本 2.2.5.RELEASE（spring-cloud-starter-security、spring-cloud-starter-oauth2）；
+3. 端口约定：auth-server 授权服务器 8080，resource-server 资源服务器 8081；
+4. 需要工具：IntelliJ IDEA、浏览器、Postman（或 curl）、MySQL（案例5-2 使用）；
+5. 测试用户：zhangsan（密码123）；测试客户端：client1（密码123）。
+二、案例5-1：授权码方式登录认证（unit5Demo1-oauth2）
+创建两个微服务，分别模拟授权服务器和资源服务器，基于授权码方式对访问进行认证，令牌存储在内存中。
+步骤1：创建父工程 unit5Demo1-oauth2
+IDEA 新建 Maven 父工程 unit5Demo1-oauth2（groupId 为 cn.js.ccit），pom.xml 代码如下：
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>cn.js.ccit</groupId>
+    <artifactId>unit5Demo1-oauth2</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>auth-server</module>
+        <module>resource-server</module>
+    </modules>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <!--Spring Cloud 2021.0.1-->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2021.0.1</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!--Spring Cloud Alibaba 2021.0.1.0-->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>2021.0.1.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!--Spring Boot 2.6.3-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>2.6.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
+步骤2：构建授权服务器 auth-server
+（1）pom.xml 添加 security、oauth2 依赖：
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-security</artifactId>
+        <version>2.2.5.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-oauth2</artifactId>
+        <version>2.2.5.RELEASE</version>
+    </dependency>
+</dependencies>
+（2）在 cn.js.ccit.auth 包下创建启动类 AuthServerApplication，添加 @EnableAuthorizationServer 注解开启授权服务器：
+package cn.js.ccit.auth;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
+
+@SpringBootApplication
+@EnableAuthorizationServer
+public class AuthServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(AuthServerApplication.class, args);
+    }
+}
+（3）在 cn.js.ccit.auth 包下创建安全配置类 SecurityConfig，添加测试用户 zhangsan（密码123，角色USER）：
+package cn.js.ccit.auth;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Bean
+    @Override
+    protected UserDetailsService userDetailsService() {
+        // 1．构建内存模式的用户管理器
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+        // 2．添加用户（用户名、密码、角色）
+        manager.createUser(User
+                .withUsername("zhangsan")
+                .password(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("123"))
+                .authorities("USER")
+                .build());
+        // 3．返回用户管理器
+        return manager;
+    }
+
+    @Override
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService());
+    }
+}
+（4）在 cn.js.ccit.auth 包下创建授权服务器配置类 AuthServerConfig，设置客户端凭证 client1（密码123，支持四种授权方式）：
+package cn.js.ccit.auth;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+
+@Configuration
+public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Override
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+        // 添加客户端凭证（为方便测试，这里设置四种授权方式）
+        clients.inMemory()
+                .withClient("client1")
+                .secret(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("123"))
+                .authorizedGrantTypes("authorization_code", "implicit", "password", "client_credentials")
+                .scopes("test")
+                .redirectUris("http://www.baidu.com");
+    }
+
+    @Override
+    public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+        // 打开 OAuth 2.0 端点
+        security.tokenKeyAccess("permitAll()")
+                .checkTokenAccess("isAuthenticated()")
+                .allowFormAuthenticationForClients();
+    }
+
+    // 使用密码方式，必须重写此方法，并调用授权管理器
+    @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+        endpoints.authenticationManager(authenticationManager);
+    }
+}
+（5）在 src/main/resources 下创建 application.yaml：
+server:
+  port: 8080
+spring:
+  application:
+    name: auth-server
+步骤3：构建资源服务器 resource-server
+（1）pom.xml 添加 security、oauth2 依赖（与 auth-server 相同，两个依赖即可）：
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-security</artifactId>
+        <version>2.2.5.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-oauth2</artifactId>
+        <version>2.2.5.RELEASE</version>
+    </dependency>
+</dependencies>
+（2）在 cn.js.ccit.resource 包下创建启动类 ResourceServerApplication，添加 @EnableResourceServer 注解开启资源服务器，并定义测试接口 /api/test：
+package cn.js.ccit.resource;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@SpringBootApplication
+@EnableResourceServer
+@RestController
+public class ResourceServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ResourceServerApplication.class, args);
+    }
+
+    @GetMapping("/api/test")
+    public String test() {
+        return "接口测试，认证通过";
+    }
+}
+（3）创建 application.yaml，配置客户端凭证与授权服务器的令牌验证端点：
+server:
+  port: 8081
+spring:
+  application:
+    name: resource-server
+security:
+  oauth2:
+    client:
+      client-id: client1
+      client-secret: 123
+    resource:
+      token-info-uri: http://localhost:8080/oauth/check_token
+步骤4：启动并测试授权码方式
+依次启动 auth-server（8080）与 resource-server（8081）。
+（1）申请授权码：浏览器访问：
+http://localhost:8080/oauth/authorize?client_id=client1&response_type=code
+预期：进入用户登录页面。输入 zhangsan / 123，点击 Sign in，进入用户授权页面，点击 Authorize 确认授权，浏览器跳转到 http://www.baidu.com，地址栏中出现 code=xxxx 参数（授权码）。
+（2）用授权码换取访问令牌：将授权码复制出来，用 Postman 或命令行发送请求：
+curl -u client1:123 -X POST "http://localhost:8080/oauth/token?code=你的授权码&grant_type=authorization_code"
+Postman 方式：地址栏输入上述 URL，Authorization 标签中 Type 选择 Basic Auth，Username 填 client1，Password 填 123，点击 Send。
+预期：返回 JSON 格式的令牌信息，其中 access_token 就是获取到的访问令牌。
+（3）无令牌访问资源：不添加任何令牌，直接访问：
+http://localhost:8081/api/test
+预期：返回 401 无权限（@EnableResourceServer 开启后，没有令牌无法访问资源）。
+（4）带令牌访问资源：在请求中添加 Bearer Token：
+curl -H "Authorization: Bearer 你的access_token" http://localhost:8081/api/test
+Postman 方式：Authorization 标签中 Type 选择 Bearer Token，Token 填入获取到的访问令牌。
+预期：正常返回“接口测试，认证通过”。
+三、案例5-2：数据库存储令牌（unit5Demo2-oauth2-jdbc）
+案例5-1 的令牌保存在内存中，授权服务器断电或重启后令牌丢失。案例5-2 将授权信息保存到数据库（MySQL），实现持久化。
+步骤1：创建父工程 unit5Demo2-oauth2-jdbc
+创建 Maven 父工程 unit5Demo2-oauth2-jdbc，pom.xml 与案例5-1 父工程结构相同（dependencyManagement 三组版本），modules 同样为 auth-server 与 resource-server。
+步骤2：构建授权服务器 auth-server
+（1）pom.xml 添加 security、oauth2、jdbc、mysql 依赖：
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-security</artifactId>
+        <version>2.2.5.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-oauth2</artifactId>
+        <version>2.2.5.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>8.0.18</version>
+    </dependency>
+</dependencies>
+（2）启动类 AuthServerApplication（同案例5-1，添加 @EnableAuthorizationServer 注解）。
+（3）安全配置类 SecurityConfig（使用 BCryptPasswordEncoder 密码编码器）：
+package cn.js.ccit.auth;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Bean
+    @Override
+    protected UserDetailsService userDetailsService() {
+        // 添加用户信息
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+        manager.createUser(User
+                .withUsername("zhangsan")
+                .password(passwordEncoder().encode("123"))
+                .authorities("USER")
+                .build());
+        return manager;
+    }
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Override
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+}
+（4）授权服务器配置类 AuthServerConfig（配置数据源、JDBC 令牌存储、从数据库读取客户端凭证）：
+package cn.js.ccit.auth;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
+import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
+import javax.sql.DataSource;
+
+@Configuration
+public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    UserDetailsService userDetailsService;
+
+    @Bean
+    @Primary
+    @ConfigurationProperties(prefix = "spring.datasource")
+    public DataSource dataSource() {
+        return DataSourceBuilder.create().build();
+    }
+
+    @Bean
+    public TokenStore jdbcTokenStore() {
+        return new JdbcTokenStore(dataSource());
+    }
+
+    @Bean
+    public ClientDetailsService jdbcClientDetailsService() {
+        return new JdbcClientDetailsService(dataSource());
+    }
+
+    @Override
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+        // 从数据库中读取客户端凭证信息
+        clients.withClientDetails(jdbcClientDetailsService());
+    }
+
+    @Override
+    public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+        // 打开 OAuth 2.0 端点
+        security.tokenKeyAccess("permitAll()")
+                .checkTokenAccess("isAuthenticated()")
+                .allowFormAuthenticationForClients();
+    }
+
+    // 配置授权端点，指定令牌存储对象
+    @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+        endpoints
+                .authenticationManager(authenticationManager)
+                .tokenStore(jdbcTokenStore());
+    }
+}
+（5）application.yaml 配置数据源（数据库名 oauth2，用户名/密码请按本机修改）：
+server:
+  port: 8080
+spring:
+  application:
+    name: auth-server
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    jdbc-url: jdbc:mysql://localhost:3306/oauth2?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+    username: root
+    password: 12345678
+步骤3：创建 oauth2 数据库与数据表
+登录 MySQL，创建数据库 oauth2，然后执行以下建表 SQL（来源：spring-security-oauth 官方 schema.sql，将 LONGVARBINARY 类型改为 MySQL 的 BLOB）：
+create table oauth_client_details (
+  client_id VARCHAR(256) PRIMARY KEY,
+  resource_ids VARCHAR(256),
+  client_secret VARCHAR(256),
+  scope VARCHAR(256),
+  authorized_grant_types VARCHAR(256),
+  web_server_redirect_uri VARCHAR(256),
+  authorities VARCHAR(256),
+  access_token_validity INTEGER,
+  refresh_token_validity INTEGER,
+  additional_information VARCHAR(4096),
+  autoapprove VARCHAR(256)
+);
+
+create table oauth_client_token (
+  token_id VARCHAR(256),
+  token BLOB,
+  authentication_id VARCHAR(256) PRIMARY KEY,
+  user_name VARCHAR(256),
+  client_id VARCHAR(256)
+);
+
+create table oauth_access_token (
+  token_id VARCHAR(256),
+  token BLOB,
+  authentication_id VARCHAR(256) PRIMARY KEY,
+  user_name VARCHAR(256),
+  client_id VARCHAR(256),
+  authentication BLOB,
+  refresh_token VARCHAR(256)
+);
+
+create table oauth_refresh_token (
+  token_id VARCHAR(256),
+  token BLOB,
+  authentication BLOB
+);
+
+create table oauth_code (
+  code VARCHAR(256), authentication BLOB
+);
+
+create table oauth_approvals (
+  userId VARCHAR(256),
+  clientId VARCHAR(256),
+  scope VARCHAR(256),
+  status VARCHAR(10),
+  expiresAt TIMESTAMP,
+  lastModifiedAt TIMESTAMP
+);
+
+create table ClientDetails (
+  appId VARCHAR(256) PRIMARY KEY,
+  resourceIds VARCHAR(256),
+  appSecret VARCHAR(256),
+  scope VARCHAR(256),
+  grantTypes VARCHAR(256),
+  redirectUrl VARCHAR(256),
+  authorities VARCHAR(256),
+  access_token_validity INTEGER,
+  refresh_token_validity INTEGER,
+  additionalInformation VARCHAR(4096),
+  autoApproveScopes VARCHAR(256)
+);
+步骤4：插入客户端凭证信息
+数据库中的客户端密码需加密存储。编写测试类输出密码123 经 BCryptPasswordEncoder 加密后的字符串：
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+public class PasswordTest {
+    public static void main(String[] args) {
+        System.out.println(new BCryptPasswordEncoder().encode("123"));
+    }
+}
+将输出复制出来，在 oauth_client_details 表中插入客户端凭证（client_secret 替换为你生成的加密串）：
+insert into oauth_client_details(client_id, client_secret, scope, authorized_grant_types)
+values ("client1",
+       "你的加密串",
+       "test",
+       "authorization_code,implicit,password,client_credentials");
+步骤5：构建资源服务器 resource-server
+（1）pom.xml 添加 security、oauth2 依赖（同案例5-1 资源服务器）。
+（2）启动类 ResourceServerApplication，添加 @EnableResourceServer 注解，接口改为 /api/userinfo（返回当前用户的授权信息）：
+package cn.js.ccit.resource;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@SpringBootApplication
+@EnableResourceServer
+@RestController
+public class ResourceServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ResourceServerApplication.class, args);
+    }
+
+    @GetMapping("/api/userinfo")
+    public Authentication getUser(Authentication authentication) {
+        return authentication;
+    }
+}
+（3）application.yaml（与案例5-1 资源服务器相同）：
+server:
+  port: 8081
+spring:
+  application:
+    name: resource-server
+security:
+  oauth2:
+    client:
+      client-id: client1
+      client-secret: 123
+    resource:
+      token-info-uri: http://localhost:8080/oauth/check_token
+步骤6：测试数据库存储令牌
+依次启动 auth-server 与 resource-server。
+（1）用客户端方式获取令牌：打开 Postman，在地址栏输入：
+http://localhost:8080/oauth/token?grant_type=client_credentials
+Authorization 标签中 Type 选择 Basic Auth，Username 填 client1，Password 填 123，点击 Send。
+预期：返回令牌信息（access_token）。
+（2）打开 MySQL，查询 oauth_access_token 表：
+select * from oauth_access_token;
+预期：表中出现刚申请的令牌记录（令牌是经过编码的，因此比较长）。至此，数据库存储令牌测试成功。
+四、两个案例对比小结
+1. 令牌存储：案例5-1 令牌存内存（授权服务器重启即丢失）；案例5-2 通过 JdbcTokenStore 将授权信息持久化到 MySQL 数据库；
+2. 客户端凭证：案例5-1 在代码中硬编码（clients.inMemory()）；案例5-2 通过 JdbcClientDetailsService 从 oauth_client_details 表读取，密码 BCrypt 加密存储；
+3. 密码编码器：案例5-1 使用 PasswordEncoderFactories.createDelegatingPasswordEncoder()；案例5-2 使用 BCryptPasswordEncoder；
+4. 测试方式：案例5-1 演示授权码方式（authorization_code，需用户登录授权）；案例5-2 演示客户端方式（client_credentials，客户端凭证直接换令牌）；
+5. 资源接口：案例5-1 为 /api/test（返回固定字符串）；案例5-2 为 /api/userinfo（返回认证信息对象），可看到令牌携带的用户信息。

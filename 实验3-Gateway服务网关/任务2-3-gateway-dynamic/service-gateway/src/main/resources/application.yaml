@@ -1,0 +1,19 @@
+server:
+  port: 8002
+spring:
+  application:
+    name: service-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+
+# 暴露 gateway 端点，便于查看 http://localhost:8002/actuator/gateway/routes
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true

@@ -1,0 +1,12 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: resource-server
+security:
+  oauth2:
+    client:
+      client-id: client1
+      client-secret: 123
+    resource:
+      token-info-uri: http://localhost:8080/oauth/check_token

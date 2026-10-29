@@ -1,0 +1,16 @@
+server:
+  port: 8001
+spring:
+  application:
+    name: service-config
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        server-addr: localhost:8848
+        file-extension: yaml
+        # 这里必须填 Nacos 控制台里该命名空间的 ID，不是名字
+        namespace: 请替换为dev命名空间的ID
+        group: MY_1_GROUP
+        # group: MY_2_GROUP

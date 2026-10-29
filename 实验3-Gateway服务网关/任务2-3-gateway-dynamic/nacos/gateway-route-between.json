@@ -1,0 +1,28 @@
+{
+  "id": "provider_route",
+  "order": 10,
+  "predicates": [
+    {
+      "name": "Between",
+      "args": {
+        "datetime1": "2026-10-13T19:00:00+08:00[Asia/Shanghai]",
+        "datetime2": "2026-10-13T22:00:00+08:00[Asia/Shanghai]"
+      }
+    },
+    {
+      "name": "Path",
+      "args": {
+        "pattern": "/provider/**"
+      }
+    }
+  ],
+  "filters": [
+    {
+      "name": "StripPrefix",
+      "args": {
+        "parts": "1"
+      }
+    }
+  ],
+  "uri": "lb://service-provider"
+}
